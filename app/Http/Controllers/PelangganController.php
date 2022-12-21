@@ -3,73 +3,154 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pelanggan;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StorePelangganRequest;
+use App\Http\Requests\UpdatePelangganRequest;
 
 class PelangganController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
-        $data = DB::table('pelanggans')
-            ->where('nama_kota', 'Jakarta')
-            ->get();
-        return view('pelanggan/pelanggan', compact('data'));
+        $data = [
+            'pelanggan' => Pelanggan::get(),
+            'no' => 1
+        ];
+
+        return view('pelanggan.index', $data);
     }
 
-    public function tambahdatapelanggan()
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
     {
-        return view('pelanggan/tambahdatapelanggan');
+        return view('pelanggan.create');
     }
 
-    public function insertdatapelanggan(Request $request)
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\StorePelangganRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(StorePelangganRequest $request)
     {
-        // dd($request->all());
-        $query = DB::table('pelanggans')->insert([
-            'kode_pelanggan' => $request->input('kodepelanggan'),
-            'nama_pelanggan' => $request->input('namapelanggan'),
-            'alamat' => $request->input('alamat'),
-            'nama_kota' => $request->input('namakota'),
-            'no_telepon' => $request->input('notelepon')
+        $this->validate($request, [
+            'kode_pelanggan' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'alamat' => 'required|string|max:255',
+            'nama_kota' => 'required|string|max:255',
+            'no_telepon' => 'required|numeric',
+        ]);
+
+        $query = Pelanggan::create([
+            'kode_pelanggan' => $request->kode_pelanggan,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'alamat' => $request->alamat,
+            'nama_kota' => $request->nama_kota,
+            'no_telepon' => $request->no_telepon,
         ]);
 
         if ($query) {
-            return redirect()->route('pelanggan');
-        }
-    }
-
-    public function tampildatapelanggan($id)
-    {
-        $data = pelanggan::find($id);
-        // dd($data);
-
-        return view('pelanggan/tampildatapelanggan', compact('data'));
-    }
-
-    public function updatedatapelanggan(Request $request)
-    {
-        $query = DB::table('pelanggans')
-            ->where('id', $request->input('id'))
-            ->update([
-                'kode_pelanggan' => $request->input('kodepelanggan'),
-                'nama_pelanggan' => $request->input('namapelanggan'),
-                'alamat' => $request->input('alamat'),
-                'nama_kota' => $request->input('namakota'),
-                'no_telepon' => $request->input('notelepon')
+            return redirect()->route('pelanggan.index')->with([
+                'success' => 'New item has been created successfully'
             ]);
-
-        if ($query) {
-            return redirect()->route('pelanggan');
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
         }
     }
 
-    public function deletedatapelanggan($id)
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Pelanggan  $pelanggan
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Pelanggan $pelanggan)
     {
-        $query = DB::table('pelanggans')
-            ->where('id', $id)
-            ->delete();
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Pelanggan  $pelanggan
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $data = [
+            'pelanggan' => Pelanggan::find($id),
+        ];
+
+        return view('pelanggan.edit', $data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdatePelangganRequest  $request
+     * @param  \App\Models\Pelanggan  $pelanggan
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdatePelangganRequest $request, $id)
+    {
+        $this->validate($request, [
+            'kode_pelanggan' => 'required|string|max:255',
+            'nama_pelanggan' => 'required|string|max:255',
+            'alamat' => 'required|string|max:255',
+            'nama_kota' => 'required|string|max:255',
+            'no_telepon' => 'required|numeric',
+        ]);
+
+        $query = Pelanggan::find($id);
+
+        $query->update([
+            'kode_pelanggan' => $request->kode_pelanggan,
+            'nama_pelanggan' => $request->nama_pelanggan,
+            'alamat' => $request->alamat,
+            'nama_kota' => $request->nama_kota,
+            'no_telepon' => $request->no_telepon,
+        ]);
 
         if ($query) {
-            return redirect()->route('pelanggan');
+            return redirect()->route('pelanggan.index')->with([
+                'success' => 'Item has been updated successfully'
+            ]);
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Pelanggan  $pelanggan
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $query = Pelanggan::find($id);
+        $query->delete();
+
+        if ($query) {
+            return redirect()->route('pelanggan.index')->with([
+                'success' => 'Item has been deleted successfully'
+            ]);
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
         }
     }
 }

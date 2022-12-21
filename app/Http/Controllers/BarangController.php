@@ -3,71 +3,154 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\StoreBarangRequest;
+use App\Http\Requests\UpdateBarangRequest;
 
 class BarangController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function index()
     {
-        $data = DB::table('barangs')->where('stok_barang', '>', 0)->get();
-        return view('barang/barang', compact('data'));
+        $data = [
+            'barang' => Barang::get(),
+            'no' => 1
+        ];
+
+        return view('barang.index', $data);
     }
 
-    public function tambahdatabarang()
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
     {
-        return view('barang/tambahdatabarang');
+        return view('barang.create');
     }
 
-    public function insertdatabarang(Request $request)
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\StoreBarangRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(StoreBarangRequest $request)
     {
-        // dd($request->all());
-        $query = DB::table('barangs')->insert([
-            'kode_barang' => $request->input('kodebarang'),
-            'nama_barang' => $request->input('namabarang'),
-            'deskripsi' => $request->input('deskripsi'),
-            'stok_barang' => $request->input('stokbarang'),
-            'harga_barang' => $request->input('hargabarang')
+        $this->validate($request, [
+            'kode_barang' => 'required|string|max:255',
+            'nama_barang' => 'required|string|max:255',
+            'deskripsi' => 'required|string|max:255',
+            'stok_barang' => 'required|numeric',
+            'harga_barang' => 'required|numeric',
+        ]);
+
+        $query = Barang::create([
+            'kode_barang' => $request->kode_barang,
+            'nama_barang' => $request->nama_barang,
+            'deskripsi' => $request->deskripsi,
+            'stok_barang' => $request->stok_barang,
+            'harga_barang' => $request->harga_barang,
         ]);
 
         if ($query) {
-            return redirect()->route('barang');
-        }
-    }
-
-    public function tampildatabarang($id)
-    {
-        $data = Barang::find($id);
-        // dd($data);
-
-        return view('barang/tampildatabarang', compact('data'));
-    }
-
-    public function updatedatabarang(Request $request)
-    {
-        $query = DB::table('barangs')
-            ->where('id', $request->input('id'))
-            ->update([
-                'kode_barang' => $request->input('kodebarang'),
-                'nama_barang' => $request->input('namabarang'),
-                'deskripsi' => $request->input('deskripsi'),
-                'stok_barang' => $request->input('stokbarang'),
-                'harga_barang' => $request->input('hargabarang')
+            return redirect()->route('barang.index')->with([
+                'success' => 'New item has been created successfully'
             ]);
-
-        if ($query) {
-            return redirect()->route('barang');
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
         }
     }
 
-    public function deletedatabarang($id)
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Barang  $barang
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Barang $barang)
     {
-        $query = DB::table('barangs')
-            ->where('id', $id)
-            ->delete();
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Barang  $barang
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $data = [
+            'barang' => Barang::find($id),
+        ];
+
+        return view('barang.edit', $data);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdateBarangRequest  $request
+     * @param  \App\Models\Barang  $barang
+     * @return \Illuminate\Http\Response
+     */
+    public function update(UpdateBarangRequest $request, $id)
+    {
+        $this->validate($request, [
+            'kode_barang' => 'required|string|max:255',
+            'nama_barang' => 'required|string|max:255',
+            'deskripsi' => 'required|string|max:255',
+            'stok_barang' => 'required|numeric',
+            'harga_barang' => 'required|numeric',
+        ]);
+
+        $query = Barang::find($id);
+
+        $query->update([
+            'kode_barang' => $request->kode_barang,
+            'nama_barang' => $request->nama_barang,
+            'deskripsi' => $request->deskripsi,
+            'stok_barang' => $request->stok_barang,
+            'harga_barang' => $request->harga_barang,
+        ]);
 
         if ($query) {
-            return redirect()->route('barang');
+            return redirect()->route('barang.index')->with([
+                'success' => 'Item has been updated successfully'
+            ]);
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Barang  $barang
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $query = Barang::find($id);
+        $query->delete();
+
+        if ($query) {
+            return redirect()->route('barang.index')->with([
+                'success' => 'Item has been deleted successfully'
+            ]);
+        } else {
+            return redirect()->back()->withInput()->with([
+                'error' => 'Some problem occurred, please try again'
+            ]);
         }
     }
 }

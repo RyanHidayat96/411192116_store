@@ -8,4 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Penjualan extends Model
 {
     use HasFactory;
+
+    public $timestamps = false;
+
+    protected $guarded = [
+        'id'
+    ];
+
+    public function barang()
+    {
+        return $this->belongsTo(Barang::class);
+    }
 }
